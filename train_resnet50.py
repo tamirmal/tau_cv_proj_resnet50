@@ -12,11 +12,10 @@ from tensorflow.python.keras.optimizers import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 
-DATASET_PATH  = './catsdogs/sample'
+DATASET_PATH  = '/home/tamir/git/keras-cats-dogs-tutorial/TAMIR_DATA'
 IMAGE_SIZE    = (224, 224)
 NUM_CLASSES   = 2
 BATCH_SIZE    = 8  # try reducing batch size or freeze more layers if your GPU runs out of memory
-FREEZE_LAYERS = 2  # freeze the first this many layers for training
 NUM_EPOCHS    = 20
 WEIGHTS_FINAL = 'model-resnet50-final.h5'
 
@@ -59,15 +58,16 @@ print('****************')
 #    low learning rate (since we are 'fine-tuning')
 net = ResNet50(include_top=False, weights='imagenet', input_tensor=None,
                input_shape=(IMAGE_SIZE[0],IMAGE_SIZE[1],3))
+
+for layer in net.layers:
+    layer.trainable = False
+
 x = net.output
 x = Flatten()(x)
 x = Dropout(0.5)(x)
 output_layer = Dense(NUM_CLASSES, activation='softmax', name='softmax')(x)
 net_final = Model(inputs=net.input, outputs=output_layer)
-for layer in net_final.layers[:FREEZE_LAYERS]:
-    layer.trainable = False
-for layer in net_final.layers[FREEZE_LAYERS:]:
-    layer.trainable = True
+
 net_final.compile(optimizer=Adam(lr=1e-5),
                   loss='categorical_crossentropy', metrics=['accuracy'])
 print(net_final.summary())
